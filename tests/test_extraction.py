@@ -10,6 +10,7 @@ class TestExtractMinutes(unittest.TestCase):
         self.assertEqual(result["topics"], [])
         self.assertEqual(result["decisions"], [])
         self.assertEqual(result["action_items"], [])
+        self.assertTrue(result["review_flags"])
 
     def test_extract_topics_and_decisions(self):
         transcript = (
@@ -37,6 +38,15 @@ class TestExtractMinutes(unittest.TestCase):
         self.assertEqual(item["owner"], "Priya")
         self.assertEqual(item["deadline"], "Monday")
         self.assertIn("prepare the report", item["task"])
+
+    def test_missing_owner_and_deadline_are_flagged(self):
+        transcript = "The team will prepare the report."
+
+        result = extract_minutes(transcript)
+
+        self.assertIn("review_flags", result)
+        self.assertTrue(result["review_flags"])
+
 
 
 if __name__ == "__main__":
