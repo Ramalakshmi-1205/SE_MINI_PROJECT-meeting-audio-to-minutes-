@@ -25,7 +25,7 @@ jobs:
             exit 1
           fi
 
-          if [ ! -d tests ] && [ ! -f test_main.py ] && [ ! -f test_app.py ]; then
+          if [ ! -d tests ] && ! find . -maxdepth 1 -type f -name "test_*.py" | grep -q .; then
             echo "::error::No recognized test suite found."
             exit 1
           fi
