@@ -229,3 +229,10 @@ __pycache__/
 # Generated meeting minutes samples
 sample_minutes.txt
 sample_minutes.docx
+
+# Local testing files - do not commit
+.venv311/
+sample_meeting.wav
+TEST_EXECUTION_REPORT_old.md
+TEST_EXECUTION_REPORT_old_backup.md
+editor_test_old.txt
