@@ -1,0 +1,8 @@
+[server]
+# SRS MM-F-001: uploads are limited to 100 MB
+maxUploadSize = 100
+
+[client]
+# Never show tracebacks, file paths or code to the user if something
+# goes wrong unexpectedly (security review F-03).
+showErrorDetails = "none"
