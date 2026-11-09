@@ -1,46 +1,70 @@
+
 from pathlib import Path
 
 
 def export_minutes(minutes, output_path, file_format=None):
     """
     Export structured meeting minutes to TXT or DOCX.
-    minutes should contain topics, decisions, and action_items.
+
+    Missing values are displayed as "Not specified".
+    Supports TXT and DOCX formats.
     """
+
     output_path = Path(output_path)
     fmt = (file_format or output_path.suffix.lstrip(".")).lower()
 
     if fmt not in ("txt", "docx"):
         raise ValueError("Supported formats are TXT and DOCX.")
 
+    topics = minutes.get("topics", [])
+    decisions = minutes.get("decisions", [])
+    action_items = minutes.get("action_items", [])
+
     lines = ["MEETING MINUTES", ""]
 
+    # Discussion Topics
     lines.append("DISCUSSION TOPICS")
-    lines.extend(
-        f"- {item}" for item in minutes.get("topics", [])
-    )
+
+    if topics:
+        lines.extend(f"- {item}" for item in topics)
+    else:
+        lines.append("None recorded.")
+
     lines.append("")
 
+    # Decisions
     lines.append("DECISIONS")
-    lines.extend(
-        f"- {item}" for item in minutes.get("decisions", [])
-    )
+
+    if decisions:
+        lines.extend(f"- {item}" for item in decisions)
+    else:
+        lines.append("None recorded.")
+
     lines.append("")
 
+    # Action Items
     lines.append("ACTION ITEMS")
-    for item in minutes.get("action_items", []):
-        task = item.get("task") or "Not specified"
-        owner = item.get("owner") or "Not assigned"
-        deadline = item.get("deadline") or "Not specified"
 
-        lines.append(f"- Task: {task}")
-        lines.append(f"  Owner: {owner}")
-        lines.append(f"  Deadline: {deadline}")
+    if action_items:
+        for item in action_items:
+            task = item.get("task") or "Not specified"
+            owner = item.get("owner") or "Not specified"
+            deadline = item.get("deadline") or "Not specified"
 
+            lines.append(f"- Task: {task}")
+            lines.append(f"  Owner: {owner}")
+            lines.append(f"  Deadline: {deadline}")
+    else:
+        lines.append("None recorded.")
+
+    # Export as TXT
     if fmt == "txt":
         output_path.write_text(
             "\n".join(lines) + "\n",
             encoding="utf-8",
         )
+
+    # Export as DOCX
     else:
         try:
             from docx import Document
@@ -51,32 +75,45 @@ def export_minutes(minutes, output_path, file_format=None):
             ) from exc
 
         document = Document()
+
         document.add_heading("Meeting Minutes", level=0)
 
-        for section, items in (
-            ("Discussion Topics", minutes.get("topics", [])),
-            ("Decisions", minutes.get("decisions", [])),
-        ):
-            document.add_heading(section, level=1)
-            if items:
-                for item in items:
-                    document.add_paragraph(str(item), style="List Bullet")
-            else:
-                document.add_paragraph("None recorded.")
+        # Discussion Topics
+        document.add_heading("Discussion Topics", level=1)
 
+        if topics:
+            for item in topics:
+                document.add_paragraph(
+                    str(item),
+                    style="List Bullet"
+                )
+        else:
+            document.add_paragraph("None recorded.")
+
+        # Decisions
+        document.add_heading("Decisions", level=1)
+
+        if decisions:
+            for item in decisions:
+                document.add_paragraph(
+                    str(item),
+                    style="List Bullet"
+                )
+        else:
+            document.add_paragraph("None recorded.")
+
+        # Action Items
         document.add_heading("Action Items", level=1)
-        action_items = minutes.get("action_items", [])
+
         if action_items:
             for item in action_items:
-                document.add_paragraph(
-                    f"Task: {item.get('task') or 'Not specified'}"
-                )
-                document.add_paragraph(
-                    f"Owner: {item.get('owner') or 'Not assigned'}"
-                )
-                document.add_paragraph(
-                    f"Deadline: {item.get('deadline') or 'Not specified'}"
-                )
+                task = item.get("task") or "Not specified"
+                owner = item.get("owner") or "Not specified"
+                deadline = item.get("deadline") or "Not specified"
+
+                document.add_paragraph(f"Task: {task}")
+                document.add_paragraph(f"Owner: {owner}")
+                document.add_paragraph(f"Deadline: {deadline}")
         else:
             document.add_paragraph("None recorded.")
 

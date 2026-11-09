@@ -1,11 +1,9 @@
-
 import re
 
 
 def extract_minutes(transcript):
     """
-    Extract discussion topics, decisions, and action items
-    from a meeting transcript.
+    Extract discussion topics, decisions, and action items.
 
     Missing or uncertain action-item details are flagged
     for human review rather than being invented.
@@ -21,7 +19,7 @@ def extract_minutes(transcript):
             ],
         }
 
-    sentences = re.split(r"(?<=[.!?])\s+", transcript.strip())
+    sentences = re.split(r'(?<=[.!?])\s+', transcript.strip())
 
     topics = []
     decisions = []
@@ -29,20 +27,22 @@ def extract_minutes(transcript):
     review_flags = []
 
     decision_keywords = [
-        "decided",
-        "approved",
-        "agreed",
-        "confirmed",
-        "finalized",
+        "decided", "approved", "agreed",
+        "confirmed", "finalized"
     ]
 
-    action_patterns = [
-        r"\bwill\s+\w+",
-        r"\bmust\s+\w+",
-        r"\bneeds?\s+to\s+\w+",
-        r"\bshould\s+\w+",
-        r"\bresponsible\s+for\b",
-        r"\bassigned\s+to\b",
+    action_keywords = [
+        "will", "must", "need to",
+        "should", "responsible for",
+        "assigned to"
+    ]
+
+    imperative_verbs = [
+        "prepare", "complete", "submit", "review",
+        "send", "create", "update", "finish",
+        "check", "organize", "schedule", "present",
+        "implement", "test", "finalize", "share",
+        "write", "design", "develop", "upload"
     ]
 
     for sentence in sentences:
@@ -54,85 +54,103 @@ def extract_minutes(transcript):
         lower_text = text.lower()
 
         # Extract discussion topics.
-        topic_keywords = [
-            "discuss",
-            "regarding",
-            "about",
-            "issue",
-            "topic",
-            "update",
-            "review",
-        ]
-
-        if any(word in lower_text for word in topic_keywords):
+        if any(word in lower_text for word in [
+            "discuss", "regarding", "about",
+            "issue", "topic", "update", "review"
+        ]):
             topics.append(text)
 
         # Extract decisions.
         if any(word in lower_text for word in decision_keywords):
             decisions.append(text)
 
-        # Extract action items.
-        if any(
-            re.search(pattern, lower_text)
-            for pattern in action_patterns
-        ):
+        # Identify action-item statements.
+        owner_match = re.search(
+            r'^([A-Z][a-z]+)\s+(?:will|must|should|needs?\s+to|need\s+to)\s+',
+            text
+        )
+
+        imperative_match = re.match(
+            r'^(' + '|'.join(imperative_verbs) + r')\b',
+            text,
+            re.IGNORECASE
+        )
+
+        has_action_keyword = any(
+            word in lower_text for word in action_keywords
+        )
+
+        if owner_match or imperative_match or has_action_keyword:
             owner = None
             deadline = None
-
-            # Identify an owner when a name explicitly precedes
-            # an action verb.
-            owner_match = re.search(
-                r"^([A-Z][a-z]+)\s+(?:will|must|should|needs?\s+to|need\s+to)\s+",
-                text,
-            )
 
             if owner_match:
                 owner = owner_match.group(1)
 
-            # Identify simple deadlines such as "by Monday"
-            # or "by Monday 12".
+            # Extract simple deadlines such as Monday or Monday 12.
             deadline_match = re.search(
-                r"\bby\s+([A-Za-z]+(?:\s+\d{1,2})?)\b",
+                r'\bby\s+([A-Za-z]+(?:\s+\d{1,2})?)\b',
                 text,
-                re.IGNORECASE,
+                re.IGNORECASE
             )
 
             if deadline_match:
                 deadline = deadline_match.group(1)
 
+            # Remove the identified owner from the task.
             task = text
 
             if owner_match:
                 task = text[owner_match.end():]
 
-            # Remove a recognised deadline from the task description.
+            # Remove a recognised deadline from the task.
             task = re.sub(
-                r"\s+by\s+[A-Za-z]+(?:\s+\d{1,2})?\b",
-                "",
+                r'\s+by\s+[A-Za-z]+(?:\s+\d{1,2})?\b',
+                '',
                 task,
-                flags=re.IGNORECASE,
+                flags=re.IGNORECASE
             ).strip().rstrip(".")
 
-            action_items.append({
-                "task": task,
-                "owner": owner,
-                "deadline": deadline,
-            })
+            if task:
+                action_items.append({
+                    "task": task,
+                    "owner": owner,
+                    "deadline": deadline
+                })
 
-            # Flag missing information for human review.
-            if owner is None:
-                review_flags.append(
-                    f"Owner needs review for action item: {task}"
-                )
+                if owner is None:
+                    review_flags.append(
+                        f"Owner needs review for action item: {task}"
+                    )
 
-            if deadline is None:
-                review_flags.append(
-                    f"Deadline needs review for action item: {task}"
-                )
+                if deadline is None:
+                    review_flags.append(
+                        f"Deadline needs review for action item: {task}"
+                    )
+
+    # Remove duplicate topics and decisions.
+    topics = list(dict.fromkeys(topics))
+    decisions = list(dict.fromkeys(decisions))
+
+    # Remove duplicate action items while retaining different owners
+    # or deadlines as separate assignments.
+    unique_action_items = []
+    seen_action_items = set()
+
+    for item in action_items:
+        key = (
+            item["task"].strip().casefold(),
+            (item["owner"] or "").strip().casefold(),
+            (item["deadline"] or "").strip().casefold()
+        )
+
+        if key not in seen_action_items:
+            seen_action_items.add(key)
+            unique_action_items.append(item)
 
     return {
-        "topics": list(dict.fromkeys(topics)),
-        "decisions": list(dict.fromkeys(decisions)),
-        "action_items": action_items,
-        "review_flags": list(dict.fromkeys(review_flags)),
+        "topics": topics,
+        "decisions": decisions,
+        "action_items": unique_action_items,
+        "review_flags": list(dict.fromkeys(review_flags))
     }
