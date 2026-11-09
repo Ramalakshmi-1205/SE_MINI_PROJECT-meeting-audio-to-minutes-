@@ -432,7 +432,7 @@ The following activities should be completed before claiming full validation:
 
 5\. Verify MP3 and M4A uploads if they are in the supported scope.
 
-6\. Investigate the file-size mismatch with the feature owner.
+6\. Resolve the file-size mismatch by setting max_upload_size=100 in app.py and verifying the 100 MB upload limit under US-03.
 
 7\. Reproduce and investigate the stale-transcript observation.
 
@@ -498,8 +498,45 @@ These results demonstrate successful execution of the automated tests and docume
 
 
 
-Performance, security, full compatibility, MP3/M4A verification, and GitHub Actions validation remain pending. The observed file-size mismatch and possible stale-transcript behavior also require investigation.
+Performance, security, full compatibility, MP3/M4A verification, and GitHub Actions validation remain pending. The 100 MB file-size mismatch has been resolved and verified under US-03. The possible stale-transcript behavior still requires investigation.
 
 
 
 The report should be updated again after the pending activities are completed.
+
+## 10. US-03: Streamlit 100 MB Upload Limit Verification
+
+**Date:** 7 November 2026
+
+**Branch:** `fix/ramalakshmi-upload-limit`
+
+**Base branch:** `upstream/main` (`3ae4f0f`)
+
+### Code change
+
+Added `max_upload_size=100` to the `st.file_uploader()` configuration in `app.py`, aligning the Streamlit uploader limit with the existing 100 MB validator and user-facing message.
+
+### Manual verification
+
+| Test | Input | Expected result | Actual result |
+|---|---|---|---|
+| Valid upload | `sample_meeting.wav` (0.48 MB) | File accepted | Passed |
+| Oversized upload | `upload_over_100mb.wav` (101 MB) | File rejected | Passed |
+
+The oversized file displayed the Streamlit message: `File must be 100.0MB or smaller.`
+
+### Automated verification
+
+Command: `python -m pytest -v`
+
+- Python: 3.11.9
+- Pytest: 9.2.0
+- Tests collected: 33
+- Passed: 33
+- Failed: 0
+- Skipped: 0
+- Execution time: 1.18 seconds
+
+### Result
+
+The US-03 upload-size correction passed both manual upload checks and the complete automated test suite. The change is ready for pull request review.
