@@ -6,7 +6,7 @@
 
 **Testing responsibility:** Test Plan, Validation, and Evidence
 
-**Project branch:** `test/ramalakshmi-us02-verification`
+**Project branch:** `test/ramalakshmi-us04-verification`
 
 **Base branch:** `upstream/main` (`3ae4f0f`)
 
@@ -148,6 +148,8 @@ The application was started locally using Streamlit and opened in Microsoft Edge
 | Actual audio transcription | After restoring and validating `sample_meeting.wav`, Faster-Whisper transcription completed successfully. | PASS |
 | MP3 upload | Uploaded `sample_meeting.mp3` (149,464 bytes). File was accepted. | PASS |
 | M4A upload | Uploaded `sample_meeting.m4a` (120,815 bytes). File was accepted. | PASS |
+| Generate meeting minutes from transcript | Generated structured minutes using the transcript displayed in the application. | PASS |
+| Download generated minutes | Downloaded the generated minutes successfully. | PASS |
 
 ## 6. US-02: Audio Upload and Transcription Verification
 
@@ -190,7 +192,94 @@ All five US-02 acceptance criteria were manually verified successfully in the de
 
 This verification records the tested scenarios and does not imply that every possible audio file or edge case has been tested.
 
-## 7. STP-to-SRS Traceability and Execution Status
+## 7. US-03: 100 MB Audio Upload Limit Verification
+
+**Date:** 7 November 2026
+
+**Story:** US-03 — Enforce Audio Upload Size Limit
+
+### Verification performed
+
+| Test | Procedure | Result |
+|---|---|---|
+| Upload limit configuration | Configured the Streamlit uploader with `max_upload_size=100`. | PASS |
+| Valid file upload | Tested a valid audio file below the size limit. | PASS |
+| Oversized file rejection | Tested a 101 MB audio file. | PASS |
+| Error message | Application displayed `File must be 100.0MB or smaller.` | PASS |
+
+### Result
+
+The 100 MB upload limit was implemented and manually verified on the separate US-03 branch.
+
+The corresponding pull request is awaiting integration review.
+
+## 8. US-04: Speech-to-Text Transcription Verification
+
+**Date:** 7 November 2026
+
+**Story:** US-04 — Speech-to-Text Transcription
+
+### Acceptance criteria verification
+
+| Acceptance criterion | Verification performed | Result |
+|---|---|---|
+| Accept validated audio files as input | Uploaded and validated `sample_meeting.wav` through the application. | PASS |
+| Use Faster-Whisper transcription engine | Actual audio transcription was completed using Faster-Whisper. | PASS |
+| Generate a readable text transcript | Generated transcript was returned successfully. | PASS |
+| Handle transcription errors gracefully | Automated tests verified transcription failure, invalid audio and missing audio handling. | PASS |
+| Display the generated transcript | Transcript appeared in the application's transcript review area. | PASS |
+| Pass transcript to minutes extraction module | Generated minutes from the actual transcript using the Generate Meeting Minutes action. | PASS |
+
+### US-04 automated test execution
+
+**Command executed:**
+
+```cmd
+python -m pytest -v test_transcription.py test_integration_pipeline.py
+```
+
+| Test file | Tests collected | Passed | Failed |
+|---|---:|---:|---:|
+| `test_transcription.py` | 5 | 5 | 0 |
+| `test_integration_pipeline.py` | 1 | 1 | 0 |
+| **Total** | **6** | **6** | **0** |
+
+**Environment:** Python 3.11.9, pytest 9.2.0
+
+**Execution time:** 0.29 seconds
+
+All six targeted tests passed.
+
+The transcription unit tests cover:
+
+- Rejection of unvalidated audio.
+- Rejection of missing audio files.
+- Successful transcript generation.
+- Handling audio with no recognized speech.
+- Handling transcription failures.
+
+The integration test verifies validated audio input and structured minutes extraction using a simulated transcript. It does not invoke the actual Whisper model.
+
+### Manual end-to-end verification
+
+The application was started locally using Streamlit and tested in Microsoft Edge.
+
+| Test | Observed result | Status |
+|---|---|---|
+| Upload and validate WAV audio | Audio accepted after validation. | PASS |
+| Actual Faster-Whisper transcription | Transcription completed successfully. | PASS |
+| Transcript generation | Readable transcript generated. | PASS |
+| Transcript display | Transcript displayed in the application. | PASS |
+| Transcript-to-minutes flow | Generated meeting minutes using the displayed transcript. | PASS |
+| Download generated minutes | Download completed successfully. | PASS |
+
+### Result
+
+All six US-04 acceptance criteria were verified through the combination of targeted automated tests, code inspection and manual end-to-end application testing.
+
+The actual Faster-Whisper transcription and transcript-to-minutes workflow were demonstrated manually. The automated integration test uses simulated transcript text, as noted above.
+
+## 9. STP-to-SRS Traceability and Execution Status
 
 "Partially verified" means some relevant behavior was tested, but the complete test-case scope was not executed.
 
@@ -222,7 +311,7 @@ This verification records the tested scenarios and does not imply that every pos
 | TC-SEC-04 | MM-SR-004 privacy-safe logging | NOT EXECUTED | Logs were not audited for sensitive content. |
 | TC-SEC-05 | MM-SR-005 file validation boundaries | Partially verified | Automated file validation tests passed; further file-boundary/security testing remains. |
 
-## 8. Observations and Issues to Report
+## 10. Observations and Issues to Report
 
 ### OBS-01: File-size information mismatch
 
@@ -248,7 +337,7 @@ This verification records the tested scenarios and does not imply that every pos
 
 **Status:** Local Python 3.11 verification completed. GitHub Actions execution remains to be confirmed.
 
-## 9. Tests and Activities Still Pending
+## 11. Tests and Activities Still Pending
 
 The following activities should be completed before claiming full validation:
 
@@ -295,11 +384,13 @@ The following nine screenshots were captured during manual testing on the previo
 
 All nine screenshot files were verified in the clean validation branch. Their contents should receive a final privacy review before submission.
 
-The MP3/M4A and US-02 verification results are documented in this report. The nine existing screenshots do not necessarily provide visual evidence for every newly executed scenario.
+The MP3/M4A, US-02, US-03 and US-04 verification results are documented in this report. The nine existing screenshots do not necessarily provide visual evidence for every newly executed scenario.
 
-## 10. Overall Conclusion
+## 12. Overall Conclusion
 
 The automated test suite consisting of 33 tests passed successfully using Python 3.11.9 and pytest 9.2.0.
+
+The targeted US-04 test execution also passed all six tests, with zero failures.
 
 Manual testing verified the main application workflow, including audio upload, transcript display, structured minutes generation, editing, saving, and DOCX export.
 
@@ -307,7 +398,9 @@ US-02 manual verification successfully covered WAV, MP3 and M4A uploads, corrupt
 
 US-03 verification separately confirmed the 100 MB upload limit, including rejection of a 101 MB test file. Its implementation is documented in a separate pull request awaiting integration review.
 
-The integration test validates audio input and structured extraction using a simulated transcript. Actual audio transcription was separately demonstrated manually.
+US-04 verification covered actual Faster-Whisper transcription, transcript display, passing the generated transcript to the minutes extraction module, and downloading the generated minutes.
+
+The integration test validates audio input and structured extraction using a simulated transcript. Actual audio transcription and the complete application workflow were separately demonstrated manually.
 
 These results demonstrate successful execution of the recorded automated tests and manual scenarios. They do not establish that every STP requirement has passed.
 
