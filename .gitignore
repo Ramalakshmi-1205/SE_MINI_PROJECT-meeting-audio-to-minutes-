@@ -236,3 +236,10 @@ sample_meeting.wav
 TEST_EXECUTION_REPORT_old.md
 TEST_EXECUTION_REPORT_old_backup.md
 editor_test_old.txt
+
+# Meeting recordings are private: never commit them (security review F-09)
+*.wav
+*.mp3
+*.m4a
+*.ogg
+*.opus

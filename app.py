@@ -138,6 +138,7 @@ uploaded_file = st.file_uploader(
     "Upload meeting audio",
     type=["wav", "mp3", "m4a"],
     help="Choose a WAV, MP3, or M4A recording up to 100 MB.",
+    max_upload_size=100,
 )
 
 if uploaded_file is not None:
