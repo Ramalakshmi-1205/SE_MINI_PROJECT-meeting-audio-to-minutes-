@@ -41,6 +41,10 @@ Each action item contains:
 - owner: responsible person's name, or None
 - deadline: stated deadline, or None
 
+Duplicate action items are removed during extraction.
+
+Action-item detection supports common action keywords and imperative verbs.
+
 ## 4. Sample Output
 
 For the sample transcript above, the expected output is:
@@ -108,8 +112,10 @@ The exporter generates the following sections:
 Missing action-item values are displayed as:
 
 - Missing task: Not specified
-- Missing owner: Not assigned
+- Missing owner: Not specified
 - Missing deadline: Not specified
+
+Empty sections are displayed as "None recorded."
 
 The DOCX output is editable.
 
@@ -126,7 +132,8 @@ The DOCX output is editable.
 - Extraction is rule-based and uses keywords and regular expressions.
 - Complex or ambiguous ownership may not be identified correctly.
 - Deadline recognition is limited to supported text patterns.
-- Duplicate action items are currently retained.
+- Action-item detection supports common imperative verbs but may not recognize unusual wording.
+- Duplicate action items are removed during extraction.
 - Missing values are represented using None in the extraction output.
 - Human review is required to verify generated minutes.
 
@@ -136,3 +143,4 @@ The DOCX output is editable.
 - The extraction output should be passed directly to the exporter.
 - The agreed dictionary structure should not be changed without coordination with the project lead.
 - Integration testing should initially use a deterministic fake transcript.
+- The integration layer is responsible for handling application-level success and empty-extraction messages.
