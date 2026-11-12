@@ -1,7 +1,7 @@
-# Sprint 2 – Audio and Transcription Verification Report
+﻿# Sprint 2 â€“ Audio and Transcription Verification Report
 
 **Project:** Meeting Audio to Structured Minutes  
-**Sprint:** Sprint 2 (November 10–14, 2026)  
+**Sprint:** Sprint 2 (November 10â€“14, 2026)
 **Responsibility:** Audio and Transcription Integration Testing  
 **Contributor:** Ramalakshmi M N  
 **Pull Request:** #36
@@ -81,7 +81,7 @@ All 59 tests passed in the recorded full-suite execution.
 
 ## 7. Pull Request
 
-**PR:** [Sprint 2: Add audio validation and transcription failure tests – #36](https://github.com/msaanvi4/SE_MINI_PROJECT-meeting-audio-to-minutes-/pull/36)
+**PR:** [Sprint 2: Add audio validation and transcription failure tests â€“ #36](https://github.com/msaanvi4/SE_MINI_PROJECT-meeting-audio-to-minutes-/pull/36)
 
 **Commit:** `eb1006e`
 
@@ -93,11 +93,31 @@ All 59 tests passed in the recorded full-suite execution.
 
 ## 8. Remaining Verification
 
-- Complete additional manual end-to-end verification.
+- Manual end-to-end verification completed successfully (see additional verification section).
 - Assess temporary-file cleanup failure scenarios.
 - Update the assigned GitHub issue with test evidence.
 - Obtain maintainer review and integration approval.
 
 ## 9. Conclusion
 
-Additional automated coverage has been introduced for audio validation and transcription error handling. The recorded full test suite completed with 59 passing tests and no failures. Further integration verification and maintainer review remain part of Sprint 2.
+Additional automated coverage has been introduced for audio validation and transcription error handling. The recorded full test suite completed with 59 passing tests and no failures. Manual integration verification has now been completed successfully. Maintainer review and the required issue updates remain part of Sprint 2.
+## Additional Manual Integration Verification — 12 November 2026
+
+The following manual checks were completed successfully in the Streamlit application:
+
+| Test | Observed result | Status |
+|---|---|---|
+| Valid WAV upload | Recording uploaded successfully | PASS |
+| Audio validation | Validation succeeded | PASS |
+| Actual Faster-Whisper transcription | Transcript generated and displayed | PASS |
+| Minutes extraction | Meeting minutes generated | PASS |
+| Edit and save minutes | Edited title saved successfully | PASS |
+| DOCX export | Downloaded DOCX opened successfully | PASS |
+| Remove uploaded recording | Previous transcript and minutes disappeared | PASS |
+| Corrupt WAV upload | Rejected with: "The file appears corrupted or is not a valid audio file." | PASS |
+| Attempt transcription without valid validation | Blocked with: "The selected recording has changed. Please validate it again before transcription." | PASS |
+| Recent temporary WAV check | No matching tmp*.wav files found in the last 30 minutes | PASS |
+
+These results confirm the tested valid-audio workflow, corrupt-file rejection, revalidation protection, and UI reset after removing the upload.
+
+Note: The temporary-file check confirms that no matching recent WAV files were present; it does not establish cleanup behavior for every possible failure scenario.
