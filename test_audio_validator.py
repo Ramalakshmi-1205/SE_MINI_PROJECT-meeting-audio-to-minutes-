@@ -33,6 +33,26 @@ class TestAudioValidator(unittest.TestCase):
         self.assertTrue(result.valid)
         self.assertEqual(result.format, "WAV")
 
+    def test_supported_mp3(self):
+        file = io.BytesIO(b"ID3" + b"\x00" * 20)
+        file.name = "meeting.mp3"
+
+        result = AudioValidator.validate(file)
+
+        self.assertTrue(result.valid)
+        self.assertEqual(result.format, "MP3")
+
+    def test_supported_m4a(self):
+        file = io.BytesIO(
+            b"\x00\x00\x00\x18ftypM4A " + b"\x00" * 20
+        )
+        file.name = "meeting.m4a"
+
+        result = AudioValidator.validate(file)
+
+        self.assertTrue(result.valid)
+        self.assertEqual(result.format, "M4A")
+
     def test_unsupported_format(self):
         file = io.BytesIO(b"some content")
         file.name = "meeting.txt"
@@ -73,6 +93,30 @@ class TestAudioValidator(unittest.TestCase):
 
         self.assertFalse(result.valid)
         self.assertIn("100 MB", result.message)
+
+    def test_file_pointer_resets_after_validation(self):
+        file = io.BytesIO(make_wav())
+        file.name = "meeting.wav"
+        file.seek(5)
+
+        AudioValidator.validate(file)
+
+        self.assertEqual(file.tell(), 0)
+
+    def test_read_error_returns_friendly_message(self):
+        class UnreadableFile:
+            name = "meeting.wav"
+
+            def seek(self, position):
+                raise OSError("Cannot read file")
+
+            def read(self):
+                raise OSError("Cannot read file")
+
+        result = AudioValidator.validate(UnreadableFile())
+
+        self.assertFalse(result.valid)
+        self.assertIn("Unable to read", result.message)
 
 
 if __name__ == "__main__":

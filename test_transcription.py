@@ -101,5 +101,45 @@ class TestTranscriptionAdapter(unittest.TestCase):
             adapter.transcribe(self.valid_audio)
 
 
+    @patch.dict("sys.modules", {"av": None, "faster_whisper": None})
+    def test_handles_missing_transcription_dependencies(self):
+        adapter = TranscriptionAdapter()
+
+        with self.assertRaisesRegex(
+            RuntimeError,
+            "Faster-Whisper or PyAV is not installed correctly",
+        ):
+            adapter.load_model()
+
+
+
+    def test_handles_model_loading_failure(self):
+        fake_av = SimpleNamespace(open=MagicMock())
+
+        fake_whisper = SimpleNamespace(
+            WhisperModel=MagicMock(
+                side_effect=Exception("Model initialization failed")
+            )
+        )
+
+        with patch.dict(
+            "sys.modules",
+            {
+                "av": fake_av,
+                "faster_whisper": fake_whisper,
+            },
+        ):
+            adapter = TranscriptionAdapter()
+
+            with self.assertRaisesRegex(
+                RuntimeError,
+                "Could not load the transcription model",
+            ):
+                adapter.load_model()
+
+
+
+
+
 if __name__ == "__main__":
     unittest.main()
